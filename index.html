@@ -1,0 +1,20 @@
+
+<!DOCTYPE html>
+<html lang="en" style="background-color: #010101;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architect</title>
+  <link rel="icon" href="/favicon.ico" />
+  <base href="./">
+  <script>
+    if (window.location.pathname.length > 1 && window.location.pathname.slice(-10) !== 'index.html' && window.location.pathname.slice(-1) !== '/') {
+      window.location.pathname += '/';
+    }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="%BASE_URL%src/main.tsx"></script>
+</body>
+</html>

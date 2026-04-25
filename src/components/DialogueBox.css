@@ -1,0 +1,71 @@
+#dialogue-box {
+  position: absolute;
+  bottom: 0;
+  width: 100vw;
+  height: 18em;
+  background-color: rgba(0, 0, 0, 0);
+  padding: 3em;
+  color: white;
+  /* box-shadow: 0 0 2em 0 rgba(0, 0, 0, 1); */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  /* z-index: 100; */
+  pointer-events: none;
+}
+
+#dialogue-box[is-hidden] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#dialogue-box::after {
+  position: absolute;
+  content: '';
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+  z-index: 101;
+  opacity: 1.0;
+}
+
+#dialogue-box p {
+  font-size: 2.4em;
+  font-family: 'HellsCemetery-Regular', monospace, sans-serif; 
+  font-weight: 400;
+  color: rgb(235, 235, 235);
+  max-width: 100%;
+  max-height: 100%;
+  position: relative;
+  z-index: 105;
+  text-shadow: 0 0 0.8em rgba(0, 0, 0, 0.9);
+}
+
+#dialogue-box p b {
+  color: rgb(255, 74, 89);
+}
+
+#dialogue-box p {
+  text-align: center;
+  max-width: 30em;
+  line-height: 1.2em;
+}
+
+#dialogue-box .background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 1.0;
+  background-color: transparent;
+}
+
+#dialogue-box {
+  background-color: rgba(0, 0, 0, 0.445);
+}
+
+#dialogue-box .cursor {
+  color: white;
+}

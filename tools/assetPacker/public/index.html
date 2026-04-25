@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asset Packer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎨 Asset Packer</h1>
+      <p class="subtitle">Select GLTF files to pack into a single GLB with Draco compression</p>
+    </header>
+    
+    <div class="controls">
+      <input 
+        type="text" 
+        id="filter" 
+        class="filter-input" 
+        placeholder="🔍 Filter files..."
+        autocomplete="off"
+      />
+      <div class="settings-row">
+        <div class="atlas-control">
+          <label for="atlasSize">Atlas Size:</label>
+          <select id="atlasSize" class="atlas-select">
+            <option value="2048">2K (2048x2048)</option>
+            <option value="4096">4K (4096x4096)</option>
+            <option value="8192">8K (8192x8192)</option>
+            <option value="16384">16K (16384x16384)</option>
+          </select>
+        </div>
+        <div class="atlas-control">
+          <label for="textureResolution">PBR Texture:</label>
+          <select id="textureResolution" class="atlas-select">
+            <option value="256">256x256</option>
+            <option value="512">512x512</option>
+            <option value="1024">1024x1024</option>
+            <option value="2048">2048x2048</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="atlas-control">
+          <label for="webpQuality">WebP Quality:</label>
+          <input type="number" id="webpQuality" class="quality-input" min="0" max="100" value="">
+        </div>
+        <div class="atlas-control">
+          <label for="webpAlphaQuality">Alpha Quality:</label>
+          <input type="number" id="webpAlphaQuality" class="quality-input" min="0" max="100" value="">
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="atlas-control">
+          <label for="mraoWebpQuality">MRAO WebP Quality:</label>
+          <input type="number" id="mraoWebpQuality" class="quality-input" min="0" max="100" value="">
+        </div>
+        <div class="atlas-control">
+          <label for="mraoWebpAlphaQuality">MRAO Alpha Quality:</label>
+          <input type="number" id="mraoWebpAlphaQuality" class="quality-input" min="0" max="100" value="">
+        </div>
+      </div>
+      <div class="button-group">
+        <button id="selectAll" class="btn btn-secondary">Select All</button>
+        <button id="deselectAll" class="btn btn-secondary">Deselect All</button>
+        <button id="pack" class="btn btn-primary">📦 PACK</button>
+      </div>
+    </div>
+    
+    <div class="stats">
+      <span id="selectedCount">0</span> of <span id="totalCount">0</span> files selected
+    </div>
+    
+    <div id="fileList" class="file-list"></div>
+    
+    <div id="status" class="status"></div>
+  </div>
+  
+  <script src="client.js"></script>
+</body>
+</html>

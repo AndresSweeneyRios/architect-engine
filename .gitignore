@@ -1,0 +1,12 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+electron.zip
+crazeoh.zip
+tools/textures/ambientcg
+*~
+src/assets/manifest.ts
+public/packed.glb
+public/atlases
