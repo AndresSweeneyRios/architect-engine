@@ -28,5 +28,7 @@ export class Simulation {
     public gpuContext: WebGPUContext
   ) {
     this.ViewSync = new ViewSync(this)
+
+    console.log(`Simulation ${this.SimulationIndex} created`, this)
   }
 }

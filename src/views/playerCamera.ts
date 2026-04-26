@@ -117,6 +117,11 @@ export class PlayerCameraView extends View {
     this.pitch = Math.min(Math.max(pitch, this.minPitch), this.maxPitch);
   }
 
+  public incrementRotation(deltaYaw: number, deltaPitch: number): void {
+    this.yaw += deltaYaw;
+    this.pitch = Math.min(Math.max(this.pitch + deltaPitch, this.minPitch), this.maxPitch);
+  }
+
   public setMovementSpeed(speed: number): void {
     this.movementSpeed = speed;
   }

@@ -23,7 +23,14 @@ export function* traverseThreeDFS(
   object: THREE.Object3D
   symbol: EntId
   parent: EntId | null
+  skip: () => void
 }> {
+  let skipped = false
+
+  const skip = () => {
+    skipped = true
+  }
+
   const {
     yieldFirst,
     parent,
@@ -36,8 +43,11 @@ export function* traverseThreeDFS(
       object,
       symbol,
       parent: parent,
+      skip,
     }
   }
+
+  if (skipped) return
 
   for (const child of object.children) {
     yield* traverseThreeDFS(child, { yieldFirst: true, parent: symbol })

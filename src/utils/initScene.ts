@@ -37,6 +37,8 @@ export const initScene = async (
     object: child,
     symbol: childEntId,
     parent: parentEntId,
+
+    skip,
   } of traverseThreeDFS(scene)) {
     objectToEntId.set(child, childEntId)
 
@@ -112,6 +114,8 @@ export const initScene = async (
           }
         }
       }
+
+      skip()
 
       continue
     } else if (child.name === "SENSORS") {
