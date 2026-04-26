@@ -26,27 +26,40 @@ const MAX_LIGHTS = 256u;
 @group(2) @binding(1) var<uniform> num_lights: u32;
 
 // A custom color pallete used for stylized color quantization.
-const PALETTE_SIZE: u32 = 16u;
+const PALETTE_SIZE: u32 = 32u;
 const PALETTE: array<vec3<f32>, PALETTE_SIZE> = array<vec3<f32>, PALETTE_SIZE>(
-  vec3<f32>(0.0, 0.0, 0.0),
-  vec3<f32>(0.08, 0.03, 0.03),
-  vec3<f32>(0.15, 0.05, 0.05),
-  vec3<f32>(0.22, 0.08, 0.07),
-
-  vec3<f32>(0.32, 0.10, 0.08),
-  vec3<f32>(0.45, 0.15, 0.10),
-  vec3<f32>(0.60, 0.20, 0.15),
-  vec3<f32>(0.75, 0.25, 0.18),
-  vec3<f32>(0.90, 0.30, 0.22),
-  vec3<f32>(1.00, 0.40, 0.30),
-
-  vec3<f32>(0.40, 0.25, 0.22),
-  vec3<f32>(0.55, 0.35, 0.30),
-  vec3<f32>(0.70, 0.50, 0.45),
-  vec3<f32>(0.85, 0.70, 0.65),
-
-  vec3<f32>(0.15, 0.18, 0.80),
-  vec3<f32>(0.30, 0.50, 0.80)
+  vec3<f32>(0.000000, 0.000000, 0.000000),
+  vec3<f32>(0.85, 0.85, 0.85),
+  vec3<f32>(0.768627, 0.780392, 0.933333),
+  vec3<f32>(0.603922, 0.560784, 0.878431),
+  vec3<f32>(0.388235, 0.364706, 0.588235),
+  vec3<f32>(0.160784, 0.184314, 0.396078),
+  vec3<f32>(0.105882, 0.113726, 0.203922),
+  vec3<f32>(1.000000, 0.890196, 0.682353),
+  vec3<f32>(0.803922, 0.733333, 0.670588),
+  vec3<f32>(0.650980, 0.521569, 0.560784),
+  vec3<f32>(0.811765, 0.364706, 0.545098),
+  vec3<f32>(0.588235, 0.286275, 0.407843),
+  vec3<f32>(1.000000, 0.705882, 0.509804),
+  vec3<f32>(0.866667, 0.525490, 0.490196),
+  vec3<f32>(0.698039, 0.411765, 0.435294),
+  vec3<f32>(0.964706, 0.776471, 0.368627),
+  vec3<f32>(0.894118, 0.564706, 0.341176),
+  vec3<f32>(0.768627, 0.407843, 0.200000),
+  vec3<f32>(0.690196, 0.815686, 0.494118),
+  vec3<f32>(0.400000, 0.666667, 0.364706),
+  vec3<f32>(0.321569, 0.709804, 0.670588),
+  vec3<f32>(0.164706, 0.513726, 0.474510),
+  vec3<f32>(0.109804, 0.337255, 0.349020),
+  vec3<f32>(0.482353, 0.882353, 0.964706),
+  vec3<f32>(0.345098, 0.623529, 0.988235),
+  vec3<f32>(0.313725, 0.411765, 0.894118),
+  vec3<f32>(0.180392, 0.266667, 0.682353),
+  vec3<f32>(0.501961, 0.337255, 0.831373),
+  vec3<f32>(0.352941, 0.231373, 0.588235),
+  vec3<f32>(1.000000, 0.729412, 0.882353),
+  vec3<f32>(0.901961, 0.529412, 0.772549),
+  vec3<f32>(0.654902, 0.349020, 0.725490)
 );
 
 // Custom 4x4 Bayer dither matrix for ordered dithering.
@@ -89,6 +102,40 @@ fn nearest_palette_color(color: vec3<f32>) -> vec3<f32> {
   return PALETTE[best_index];
 }
 
+fn dither_palette_color(color: vec3<f32>, frag_coords: vec2<u32>) -> vec3<f32> {
+  var best0_idx: u32 = 0u;
+  var best1_idx: u32 = 0u;
+  var best0_dist: f32 = 1e9;
+  var best1_dist: f32 = 1e9;
+
+  for (var i: u32 = 0u; i < PALETTE_SIZE; i = i + 1u) {
+    let d: f32 = distance(color, PALETTE[i]);
+    if (d < best0_dist) {
+      best1_dist = best0_dist;
+      best1_idx = best0_idx;
+      best0_dist = d;
+      best0_idx = i;
+    } else if (d < best1_dist) {
+      best1_dist = d;
+      best1_idx = i;
+    }
+  }
+
+  let c0 = PALETTE[best0_idx];
+  let c1 = PALETTE[best1_idx];
+  let axis = c1 - c0;
+  let axis_len2 = max(dot(axis, axis), 1e-5);
+
+  let blend = clamp(dot(color - c0, axis) / axis_len2, 0.0, 1.0);
+
+  let x: u32 = frag_coords.x % 4u;
+  let y: u32 = frag_coords.y % 4u;
+  let threshold: f32 = (DITHER_MATRIX[y][x] + 0.5) / 16.0;
+  let pick_second: f32 = select(0.0, 1.0, blend > threshold);
+
+  return mix(c0, c1, pick_second);
+}
+
 fn contrast(color: vec3<f32>, contrast: f32) -> vec3<f32> {
   return clamp(((color - vec3<f32>(0.5)) * contrast) + vec3<f32>(0.5), vec3<f32>(0.0), vec3<f32>(1.0));
 }
@@ -123,7 +170,7 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
 
   let exposure = 0.005;
   let PI: f32 = 3.14159265;
-  var direct_lighting = vec3<f32>(0.0);
+  var direct_lighting = vec3<f32>(1.0);
 
   let cameraPosition = camera.inverseViewMatrix[3].xyz;
   let view_dir = normalize(cameraPosition - position);
@@ -168,11 +215,12 @@ fn fs_main(@builtin(position) frag_coord: vec4<f32>) -> @location(0) vec4<f32> {
     direct_lighting += outgoing;
   }
 
-  var lighting = mix(direct_lighting * exposure, emissive.rgb, emissive.a);
+  var lighting = mix(vec3<f32>(1.0) * exposure, emissive.rgb, emissive.a);
 
   var lightingWithEmissive = mix(direct_lighting * exposure, emissive.rgb, emissive.a);
 
-  let final_color = nearest_palette_color(saturation(contrast(brightness(lightingWithEmissive, 0.15), 8.0), 3.0));
+  let graded_albedo = saturation(contrast(brightness(albedo, 0.15), 1.5), 1.5);
+  let final_color = dither_palette_color(graded_albedo, coords);
   // let final_color = nearest_palette_color(contrast(lightingWithEmissive, 5.0));
 
   return vec4<f32>(final_color, 1.0);
