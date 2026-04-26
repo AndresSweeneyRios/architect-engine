@@ -1,11 +1,11 @@
 {
   "selected": [
-    "3d\\scenes\\SITE_22\\SITE_22.gltf"
+    "3d\\scenes\\DEMO\\DEMO.gltf"
   ],
   "atlasSize": 8192,
-  "textureResolution": 1024,
-  "webpQuality": 60,
-  "webpAlphaQuality": 40,
+  "textureResolution": 2048,
+  "webpQuality": 95,
+  "webpAlphaQuality": 70,
   "mraoWebpQuality": 60,
   "mraoWebpAlphaQuality": 40
 }
