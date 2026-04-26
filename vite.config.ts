@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import checker from 'vite-plugin-checker'
 import wasm from "vite-plugin-wasm"
 import { ViteEjsPlugin } from 'vite-plugin-ejs'
+import { analyzer } from 'vite-bundle-analyzer'
 
 const ENV = process.env.ENV || 'production'
 
@@ -11,6 +12,15 @@ const config = defineConfig({
   base: './',
   assetsInclude: ['**/*.glb', '**/*.mid'],
   plugins: [
+    {
+      name: 'remove-sourcemaps',
+      transform(code) {
+        return {
+          code,
+          map: { mappings: '' }
+        }
+      }
+    },
     ViteEjsPlugin({
       ENV: ENV,
       PROJECT: 'architect',
@@ -19,6 +29,7 @@ const config = defineConfig({
     checker({
       typescript: true,
     }),
+    // process.env.NODE_ENV === 'production' && analyzer()
   ],
   server: {
     headers: {

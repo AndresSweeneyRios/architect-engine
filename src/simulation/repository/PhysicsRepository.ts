@@ -13,11 +13,11 @@ import {
 
 import * as THREE from "three"
 import { traverseThreeDFS } from "../../utils/traverse"
-import RAPIER from "@dimforge/rapier3d-compat"
+import RAPIER from "@dimforge/rapier3d"
 import { getMeshCenter } from "../../utils/math"
 
 export const rapierFinishedLoading = (async () => {
-  await RAPIER.init()
+  // await RAPIER.init()
 })()
 
 const TERMINAL_VELOCITY = 50
