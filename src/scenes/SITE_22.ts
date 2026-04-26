@@ -10,7 +10,7 @@ export const init = async (): Promise<() => void> => {
   const simulation = new Simulation(gpuContext);
 
   await initScene(simulation, {
-    scene: "3d_scenes_SITE_22_SITE_22_gltf"
+    scene: "3d_scenes_DEMO_DEMO_gltf"
   });
 
   simulation.Camera.lookAt([-10, 0, 0], [0, 0, 0]);
