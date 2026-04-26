@@ -262,7 +262,8 @@ fn sampleDecal(
   uv: vec2<f32>,
   uvRect: vec4<f32>,
 ) -> vec4<f32> {
-  let sample = textureSample(tex, samp, uvRect.xy + uv * uvRect.zw);
+  let atlasUV = uvRect.xy + fract(uv) * uvRect.zw;
+  let sample = textureSample(tex, samp, atlasUV);
   
   return sample;
 }
