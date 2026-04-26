@@ -17,7 +17,7 @@ export const refreshDepthTexture = (gpuContext: WebGPUContext) => {
       height: gpuContext.canvas.height,
       depthOrArrayLayers: 1,
     },
-    format: 'depth16unorm',
+    format: 'depth24plus',
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
     label: 'Depth Texture',
   })

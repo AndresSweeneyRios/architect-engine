@@ -110,7 +110,7 @@ const createPipeline = async (gpuContext: WebGPUContext) => {
     },
 
     depthStencil: {
-      format: 'depth16unorm',
+      format: 'depth24plus',
       depthWriteEnabled: true,
       depthCompare: 'less',
     },
