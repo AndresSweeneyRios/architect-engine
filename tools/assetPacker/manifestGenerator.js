@@ -99,8 +99,8 @@ export async function generateManifest(selectedFiles, allFiles, atlasManifest = 
     })
   })
 
-  const packedGlbRelative = '/' + PACKED_GLB_NAME
-  const atlasesDirRelative = '/' + ATLASES_DIR_NAME
+  const packedGlbRelative = './' + PACKED_GLB_NAME
+  const atlasesDirRelative = './' + ATLASES_DIR_NAME
 
   const manifestContent = `export const ASSET_MANIFEST = ${JSON.stringify(manifestObj, null, 2)} as const
 
