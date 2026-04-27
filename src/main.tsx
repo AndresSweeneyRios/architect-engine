@@ -38,7 +38,7 @@ if (isWebGPUSupported) {
           Enviroment art
         </small>
         <a href="https://glenatron.artstation.com/projects/AJGbV">
-          <p>Littlest Tokyo — Glex Fox</p>
+          <p>Littlest Tokyo — Glen Fox</p>
         </a>
       </div>
       <div id="github">
