@@ -1,5 +1,7 @@
 # Architect
 
+https://github.com/user-attachments/assets/7b4e8c05-3c31-41b5-a2fb-7bf1077bd998
+
 WebGPU-first game engine prototype built with TypeScript, React, and Vite.
 
 Architect combines a custom deferred renderer, fixed-step simulation, and an asset packing pipeline for large scene workflows.
