@@ -25,8 +25,9 @@ import { extractTexturePaths } from './gltfScanner.js'
  * @returns {Promise<void>}
  */
 export async function generateManifest(selectedFiles, allFiles, atlasManifest = {}) {
-  const fileMap = new Map(allFiles.map(f => [f.gltfPath, f]))
-  const selected = selectedFiles.map(path => fileMap.get(path)).filter(Boolean)
+  const normalizePath = (filePath) => String(filePath).replace(/\\/g, '/')
+  const fileMap = new Map(allFiles.map(f => [normalizePath(f.gltfPath), f]))
+  const selected = selectedFiles.map(filePath => fileMap.get(normalizePath(filePath))).filter(Boolean)
   const manifestObj = {}
 
   selected.forEach(f => {

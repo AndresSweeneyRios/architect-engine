@@ -36,8 +36,9 @@ import { createAtlas, createCombinedMRAOImage } from './atlasGenerator.js'
  * @returns {Promise<Record<string, AtlasManifestEntry>>}
  */
 export async function generateAtlases(selectedFiles, allFiles, atlasSize, textureResolution, webpQuality, webpAlphaQuality, mraoWebpQuality, mraoWebpAlphaQuality) {
-  const fileMap = new Map(allFiles.map(f => [f.gltfPath, f]))
-  const selected = selectedFiles.map(filePath => fileMap.get(filePath)).filter(Boolean)
+  const normalizePath = (filePath) => String(filePath).replace(/\\/g, '/')
+  const fileMap = new Map(allFiles.map(f => [normalizePath(f.gltfPath), f]))
+  const selected = selectedFiles.map(filePath => fileMap.get(normalizePath(filePath))).filter(Boolean)
 
   /** @type {Record<string, Set<string | { id: string, buffer: Buffer, width: number, height: number }>>} */
   const texturesByType = {}
