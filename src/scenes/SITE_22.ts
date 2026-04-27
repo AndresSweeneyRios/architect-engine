@@ -7,6 +7,11 @@ import { createRenderLoop } from "../simulation/loop";
 import { initScene } from "../utils/initScene";
 import { View } from "../simulation/View";
 
+const PIVOT_DISTANCE = 60;
+const PIVOT_HEIGHT = 40;
+const PIVOT_SPEED = -20;
+const PIVOT_ORIGIN = vec3.fromValues(-4, -5, 2);
+
 export const init = async (): Promise<() => void> => {
   const simulation = new Simulation(gpuContext);
 
@@ -16,9 +21,20 @@ export const init = async (): Promise<() => void> => {
 
   simulation.Camera.lookAt([-10, 0, 0], [0, 0, 0]);
 
+
+  let pivotYaw = 0;
+
   const cameraRotationView = new class extends View {
     public Draw(simulation: Simulation, lerpFactor: number, delta: number): void {
-      playerCamera.incrementRotation(10 * delta, 0);
+      const radians = (pivotYaw * Math.PI) / 180;
+      const x = Math.cos(radians) * PIVOT_DISTANCE;
+      const z = Math.sin(radians) * PIVOT_DISTANCE;
+      const y = PIVOT_HEIGHT;
+
+      playerCamera.setPosition(vec3.fromValues(x, y, z));
+      playerCamera.lookAt(PIVOT_ORIGIN);
+
+      pivotYaw += PIVOT_SPEED * delta;
     }
   }
 
@@ -37,7 +53,7 @@ export const init = async (): Promise<() => void> => {
     initialPosition: vec3.fromValues(0, 2, 0),
     initialYaw: 90,
     initialPitch: 0,
-    movementSpeed: 10,
+    movementSpeed: 30,
     lookSensitivity: 0.12,
     maxPitch: 89,
     minPitch: -89,

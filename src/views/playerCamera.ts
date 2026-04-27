@@ -56,14 +56,16 @@ export class PlayerCameraView extends View {
     this.pitch = Math.min(Math.max(this.pitch, this.minPitch), this.maxPitch);
 
     const yawRadians = (this.yaw * Math.PI) / 180;
+    const pitchRadians = (this.pitch * Math.PI) / 180;
+    const cosPitch = Math.cos(pitchRadians);
 
-    this.forward[0] = Math.cos(yawRadians);
-    this.forward[1] = 0;
-    this.forward[2] = Math.sin(yawRadians);
+    this.forward[0] = Math.cos(yawRadians) * cosPitch;
+    this.forward[1] = Math.sin(pitchRadians);
+    this.forward[2] = Math.sin(yawRadians) * cosPitch;
 
-    this.right[0] = -this.forward[2];
+    this.right[0] = -Math.sin(yawRadians);
     this.right[1] = 0;
-    this.right[2] = this.forward[0];
+    this.right[2] = Math.cos(yawRadians);
 
     vec3.set(this.transformedMovement, 0, 0, 0);
 
@@ -128,5 +130,16 @@ export class PlayerCameraView extends View {
 
   public setLookSensitivity(sensitivity: number): void {
     this.lookSensitivity = sensitivity;
+  }
+
+  public lookAt(target: vec3): void {
+    const direction = vec3.create();
+    vec3.subtract(direction, target, this.cameraPosition);
+    vec3.normalize(direction, direction);
+
+    const pitch = Math.asin(direction[1]) * (180 / Math.PI);
+    const yaw = Math.atan2(direction[2], direction[0]) * (180 / Math.PI);
+
+    this.setRotation(yaw, pitch);
   }
 }
