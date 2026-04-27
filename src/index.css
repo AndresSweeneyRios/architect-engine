@@ -1,8 +1,3 @@
-@font-face {
-  font-family: 'Atkinson Hyperlegible';
-  src: url('./assets/fonts/AtkinsonHyperlegible-Regular.ttf') format('truetype');
-}
-
 *, *::before, *::after {
   margin: 0;
   padding: 0;
