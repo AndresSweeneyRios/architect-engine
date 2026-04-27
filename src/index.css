@@ -55,8 +55,9 @@ canvas {
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
   image-rendering: pixelated;
-  width: 100% !important;
-  height: 100% !important;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 #debug {
