@@ -40,7 +40,7 @@ const createGBufferTextureConfig = <
 export const G_BUFFER = Object.freeze([
   createGBufferTextureConfig(0, TEXTURE_FORMATS.RGBA_W1, [0, 0, 0, 0], 'position'),
   createGBufferTextureConfig(1, TEXTURE_FORMATS.RGBA_W1, [0, 0, 1, 0], 'normal'),
-  createGBufferTextureConfig(2, TEXTURE_FORMATS.RGBA_W0, [0, 0, 0, 1], 'albedo'),
+  createGBufferTextureConfig(2, TEXTURE_FORMATS.RGBA_W0, [0.02, 0.02, 0.04, 1], 'albedo'),
   createGBufferTextureConfig(3, TEXTURE_FORMATS.RGBA_W0, [0, 0, 0, 1], 'emissive'),
   createGBufferTextureConfig(4, TEXTURE_FORMATS.RGBA_W0, [0, 1, 1, 1], 'metallicRoughnessAOAlpha'),
 ] as const);
