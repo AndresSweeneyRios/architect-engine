@@ -1,3 +1,4 @@
+
 import type { Simulation } from "."
 import { Tick } from "./systems"
 import { draw } from "../graphics/webgpu/renderer"
@@ -18,17 +19,6 @@ const FRAME_DURATION_MS = 1000 / 60
  * Normalized frame duration in seconds, used for fixed time step updates and delta time operations.
  */
 const FRAME_DURATION_S = FRAME_DURATION_MS / 1000
-
-/**
- * NOOP buffer for the `Atomics.waitAsync()` call in the render loop. This is used to yield control back to the browser with minimal overhead.
- */
-const ATOMICS_BUFFER = new Int32Array(new SharedArrayBuffer(4))
-
-/**
- * Determines the rate of fire for `Atomics.waitAsync()`.
- */
-const MAX_REFRESH_RATE = 500
-const RENDER_LOOP_MS = Math.ceil(1000 / MAX_REFRESH_RATE)
 
 export function stepLoop(simulation: Simulation, now: number) {
   const viewSync = simulation.ViewSync
@@ -93,20 +83,7 @@ export const createRenderLoop = (simulation: Simulation): (() => void) => {
 
       stepLoop(simulation, now)
 
-      draw(simulation)
-
-      /**
-       * Though unsightly, this is the fastest way to yield control back to the browser in between frames.
-       * 
-       * `setTimeout()`, `setInterval()`, `requestAnimationFrame()`, and even `queueMicrotask()` all have significantly 
-       * higher overhead compared to `Atomics.waitAsync()` and can introduce frame jitter.
-       * 
-       * With a LOOP_MS value of 2, we can achieve a maximum refresh rate of approximately 500Hz.
-       * This is useful for when you need more than 1 frame in flight, which is necessary for some implementations of WebGPU.
-       * 
-       * ⚠️ It is vital that all operations performed within the render loop are throttled.
-       */
-      await Atomics.waitAsync(ATOMICS_BUFFER, 0, 0, RENDER_LOOP_MS).value
+      await draw(simulation)
 
       render()
     } catch (error) {

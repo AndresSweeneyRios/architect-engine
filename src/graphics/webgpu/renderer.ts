@@ -114,9 +114,11 @@ export const draw = (simulation: Simulation) => {
 
   framesInFlight++
 
-  device.queue.onSubmittedWorkDone().then(() => {
+  const submittedWorkDone = device.queue.onSubmittedWorkDone().then(() => {
     framesInFlight--;
   });
 
   device.queue.submit([commandEncoder.finish()]);
+
+  return submittedWorkDone;
 };
