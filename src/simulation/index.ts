@@ -22,7 +22,7 @@ export class Simulation {
   public LastFrameTime = 0
   public AccumulatedTime = 0
 
-  public Camera = createCamera(40, 0.1, 1000)
+  public Camera = createCamera(40, 0.5, 100)
 
   constructor(
     public gpuContext: WebGPUContext
