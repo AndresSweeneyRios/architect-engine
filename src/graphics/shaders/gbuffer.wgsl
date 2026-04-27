@@ -28,10 +28,10 @@ struct MatParams {
   metallicRoughnessAOAlphaDecalStencilUV : vec4<f32>,
 
   hasMetallicRoughnessAOAlphaTriplanar : f32,
+  hasMetallicRoughnessAOAlphaDecal : f32,
   normalStrength : f32,
 
   // Padding to adhere to the buffer structure requirements
-  p0: f32,
   p1: f32,
 }
 
@@ -91,6 +91,22 @@ struct SkinnedVertex {
 
 @group(2) @binding(0) var<uniform> camera : CameraUniforms;
 @group(2) @binding(1) var samp : sampler;
+
+// Custom 4x4 Bayer dither matrix for ordered dithering.
+const DITHER_MATRIX: array<array<f32, 4>, 4> = array<array<f32,4>,4>(
+  array<f32,4>(0.0,  8.0,  2.0, 10.0),
+  array<f32,4>(12.0, 4.0, 14.0, 6.0),
+  array<f32,4>(3.0, 11.0, 1.0,  9.0),
+  array<f32,4>(15.0, 7.0, 13.0, 5.0)
+);
+
+fn apply_alpha_dither(alpha: f32, frag_coords: vec2<f32>) -> f32 {
+  let x: u32 = u32(frag_coords.x) & 3u;
+  let y: u32 = u32(frag_coords.y) & 3u;
+  let threshold: f32 = (DITHER_MATRIX[y][x] + 0.5) / 16.0;
+
+  return alpha * 1.3 - threshold;
+}
 
 fn applySkinning(
   positionIn: vec3<f32>,
@@ -276,29 +292,20 @@ fn mixTextures(
   return mix(mix(defaultValue, triplanar, triplanar.a), decal, decal.a);
 }
 
-fn mixChannelStencil(
-  defaultValue: f32,
-  triplanar: f32,
-  hasTriplanar: f32,
-  decal: f32,
-  decalStencil: f32,
-) -> f32 {
-  return mix(mix(defaultValue, triplanar, step(0.5, hasTriplanar)), decal, step(0.5, decalStencil));
-}
-
-fn mixChannelsStencil(
+fn mixMRAOA(
   defaultValue: vec4<f32>,
   triplanar: vec4<f32>,
-  hasTriplanar: f32,
   decal: vec4<f32>,
-  decalStencil: vec4<f32>,
+  hasTriplanar: f32,
+  hasDecal: f32,
 ) -> vec4<f32> {
-  return vec4<f32>(
-    mixChannelStencil(defaultValue.x, triplanar.x, hasTriplanar, decal.x, decalStencil.x),
-    mixChannelStencil(defaultValue.y, triplanar.y, hasTriplanar, decal.y, decalStencil.y),
-    mixChannelStencil(defaultValue.z, triplanar.z, hasTriplanar, decal.z, decalStencil.z),
-    mixChannelStencil(defaultValue.w, triplanar.w, hasTriplanar, decal.w, decalStencil.w),
-  );
+  if (hasDecal > 0.5) {
+    return decal;
+  } else if (hasTriplanar > 0.5) {
+    return triplanar;
+  } else {
+    return defaultValue;
+  }
 }
 
 fn inverseMat3(m: mat3x3<f32>) -> mat3x3<f32> {
@@ -347,20 +354,24 @@ fn fs_main(input: VertexOutput) -> GBufferOutput {
 
   let metallicRoughnessAOAlphaTriplanar = sampleTriplanar(metallicRoughnessAOAlphaTriplanar, material.metallicRoughnessAOAlphaTriplanarUV, pos, scale, w);
   let metallicRoughnessAOAlphaDecal = sampleDecal(metallicRoughnessAOAlphaDecal, input.uv, material.metallicRoughnessAOAlphaDecalUV);
-  let metallicRoughnessAOAlphaDecalStencil = sampleDecal(metallicRoughnessAOAlphaDecalStencil, input.uv, material.metallicRoughnessAOAlphaDecalStencilUV);
 
-  let metallicRoughnessAOAlpha = mixChannelsStencil(
+  let metallicRoughnessAOAlpha = mixMRAOA(
     material.metallicRoughnessAOAlphaDefault, 
     metallicRoughnessAOAlphaTriplanar, 
+    metallicRoughnessAOAlphaDecal,
     material.hasMetallicRoughnessAOAlphaTriplanar, 
-    metallicRoughnessAOAlphaDecal, 
-    metallicRoughnessAOAlphaDecalStencil,
+    material.hasMetallicRoughnessAOAlphaDecal,
   );
+
+  if (apply_alpha_dither(metallicRoughnessAOAlpha.a, input.clip_position.xy) < 0.0) {
+    discard;
+  }
 
   return GBufferOutput(
     vec4<f32>(input.world_pos, 1.0),
     vec4<f32>(normal, 1.0),
     albedo,
+    // vec4<f32>(metallicRoughnessAOAlpha.a, 0.0, 0.0, 1.0),
     emissive,
     metallicRoughnessAOAlpha,
   );

@@ -106,7 +106,7 @@ const createPipeline = async (gpuContext: WebGPUContext) => {
 
     primitive: {
       topology: 'triangle-list',
-      cullMode: 'none',
+      cullMode: 'back',
     },
 
     depthStencil: {

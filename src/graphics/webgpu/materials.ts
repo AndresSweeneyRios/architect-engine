@@ -83,6 +83,7 @@ const bindMaterialConfig = async (gpuContext: WebGPUContext, config: MaterialCon
   const buffer = bindGroupBuffer;
 
   const hasMetallicRoughnessAOAlphaTriplanar = config.metallicRoughnessAOAlphaTriplanar ? 1 : 0;
+  const hasMetallicRoughnessAOAlphaDecal = config.metallicRoughnessAOAlphaDecal ? 1 : 0;
 
   buffer.set(config.albedoDefault ?? DUMMY_TEXTURE_BYTES.albedo, 0);
   buffer.set(config.emissiveDefault ?? DUMMY_TEXTURE_BYTES.emissive, 4);
@@ -102,7 +103,8 @@ const bindMaterialConfig = async (gpuContext: WebGPUContext, config: MaterialCon
   buffer.set(config.metallicRoughnessAOAlphaDecalStencilUV ?? DUMMY_UV, 48);
 
   buffer[52] = hasMetallicRoughnessAOAlphaTriplanar;
-  buffer[53] = config.normalStrength ?? 1;
+  buffer[53] = hasMetallicRoughnessAOAlphaDecal;
+  buffer[54] = config.normalStrength ?? 1;
 
   const gpuBuffer = gpuContext.device.createBuffer({
     label: `${String(symbol)} Material Buffer`,
