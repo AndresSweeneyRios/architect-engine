@@ -1,16 +1,17 @@
 import bpy
 import os
 import hashlib
+import re
 from typing import Any, Generator
 from .config import (
     TARGET_NODE_LABEL, SCALE_FIELD_NAME, NORMAL_NODE_LABEL,
-    EMISSIVE_NODE_LABEL, EMISSIVE_TEXTURE_LABEL,
-    ALBEDO_TEXTURE_LABEL, NORMAL_TEXTURE_LABEL, METALLIC_TEXTURE_LABEL,
-    ROUGHNESS_TEXTURE_LABEL, ALPHA_TEXTURE_LABEL, AO_TEXTURE_LABEL,
-    ALBEDO_TRIPLANAR_TEXTURE_LABEL, NORMAL_TRIPLANAR_TEXTURE_LABEL,
-    METALLIC_TRIPLANAR_TEXTURE_LABEL, ROUGHNESS_TRIPLANAR_TEXTURE_LABEL,
-    ALPHA_TRIPLANAR_TEXTURE_LABEL, AO_TRIPLANAR_TEXTURE_LABEL,
-    EMISSIVE_TRIPLANAR_TEXTURE_LABEL
+    EMISSIVE_NODE_LABEL, EMISSIVE_TEXTURE_LABEL_REGEX,
+    ALBEDO_TEXTURE_LABEL_REGEX, NORMAL_TEXTURE_LABEL_REGEX, METALLIC_TEXTURE_LABEL_REGEX,
+    ROUGHNESS_TEXTURE_LABEL_REGEX, ALPHA_TEXTURE_LABEL_REGEX, AO_TEXTURE_LABEL_REGEX,
+    ALBEDO_TRIPLANAR_TEXTURE_LABEL_REGEX, NORMAL_TRIPLANAR_TEXTURE_LABEL_REGEX,
+    METALLIC_TRIPLANAR_TEXTURE_LABEL_REGEX, ROUGHNESS_TRIPLANAR_TEXTURE_LABEL_REGEX,
+    ALPHA_TRIPLANAR_TEXTURE_LABEL_REGEX, AO_TRIPLANAR_TEXTURE_LABEL_REGEX,
+    EMISSIVE_TRIPLANAR_TEXTURE_LABEL_REGEX
 )
 
 def get_all_nodes(node_tree: bpy.types.NodeTree) -> Generator[bpy.types.Node, None, None]:
@@ -89,37 +90,64 @@ def extract_texture_paths(material: bpy.types.Material) -> dict[str, dict[str, s
 
     if not material.use_nodes or not material.node_tree:
         return textures
-    texture_mapping = {
-        ALBEDO_TEXTURE_LABEL: 'albedoTexture',
-        NORMAL_TEXTURE_LABEL: 'normalTexture',
-        METALLIC_TEXTURE_LABEL: 'metallicTexture',
-        ROUGHNESS_TEXTURE_LABEL: 'roughnessTexture',
-        ALPHA_TEXTURE_LABEL: 'alphaTexture',
-        AO_TEXTURE_LABEL: 'occlusionTexture',
-        EMISSIVE_TEXTURE_LABEL: 'emissiveTexture',
-        ALBEDO_TRIPLANAR_TEXTURE_LABEL: 'albedoTriplanarTexture',
-        NORMAL_TRIPLANAR_TEXTURE_LABEL: 'normalTriplanarTexture',
-        METALLIC_TRIPLANAR_TEXTURE_LABEL: 'metallicTriplanarTexture',
-        ROUGHNESS_TRIPLANAR_TEXTURE_LABEL: 'roughnessTriplanarTexture',
-        ALPHA_TRIPLANAR_TEXTURE_LABEL: 'alphaTriplanarTexture',
-        AO_TRIPLANAR_TEXTURE_LABEL: 'occlusionTriplanarTexture',
-        EMISSIVE_TRIPLANAR_TEXTURE_LABEL: 'emissiveTriplanarTexture',
-    }
-    for node in get_all_nodes(material.node_tree):
-        if node.type == 'TEX_IMAGE' and node.label in texture_mapping:
-            if not node.image:
-                continue
-            saved_path = _save_packed_image_if_needed(node.image)
-            if saved_path:
-                uri = saved_path
-            else:
-                uri = getattr(node.image, 'filepath', None)
 
-            if uri:
-                gltf_name = texture_mapping[node.label]
-                textures[gltf_name] = {
-                    'uri': uri
-                }
+    texture_mapping: tuple[tuple[re.Pattern[str], str], ...] = (
+        (ALBEDO_TEXTURE_LABEL_REGEX, 'albedoTexture'),
+        (NORMAL_TEXTURE_LABEL_REGEX, 'normalTexture'),
+        (METALLIC_TEXTURE_LABEL_REGEX, 'metallicTexture'),
+        (ROUGHNESS_TEXTURE_LABEL_REGEX, 'roughnessTexture'),
+        (ALPHA_TEXTURE_LABEL_REGEX, 'alphaTexture'),
+        (AO_TEXTURE_LABEL_REGEX, 'occlusionTexture'),
+        (EMISSIVE_TEXTURE_LABEL_REGEX, 'emissiveTexture'),
+        (ALBEDO_TRIPLANAR_TEXTURE_LABEL_REGEX, 'albedoTriplanarTexture'),
+        (NORMAL_TRIPLANAR_TEXTURE_LABEL_REGEX, 'normalTriplanarTexture'),
+        (METALLIC_TRIPLANAR_TEXTURE_LABEL_REGEX, 'metallicTriplanarTexture'),
+        (ROUGHNESS_TRIPLANAR_TEXTURE_LABEL_REGEX, 'roughnessTriplanarTexture'),
+        (ALPHA_TRIPLANAR_TEXTURE_LABEL_REGEX, 'alphaTriplanarTexture'),
+        (AO_TRIPLANAR_TEXTURE_LABEL_REGEX, 'occlusionTriplanarTexture'),
+        (EMISSIVE_TRIPLANAR_TEXTURE_LABEL_REGEX, 'emissiveTriplanarTexture'),
+    )
+
+    for node in get_all_nodes(material.node_tree):
+        if node.type != 'TEX_IMAGE' or not node.image:
+            continue
+
+        match_candidates: list[str] = []
+        for raw in (node.label, node.name, getattr(node.image, 'name', None)):
+            candidate = (raw or '').strip()
+            if candidate:
+                match_candidates.append(candidate)
+        image_filepath = (getattr(node.image, 'filepath', None) or '').strip()
+        if image_filepath:
+            file_name = os.path.basename(image_filepath)
+            file_stem, _ = os.path.splitext(file_name)
+            if file_name:
+                match_candidates.append(file_name)
+            if file_stem:
+                match_candidates.append(file_stem)
+
+        if not match_candidates:
+            continue
+
+        matched_gltf_name: str | None = None
+        for label_pattern, gltf_name in texture_mapping:
+            if any(label_pattern.fullmatch(candidate) for candidate in match_candidates):
+                matched_gltf_name = gltf_name
+                break
+
+        if not matched_gltf_name:
+            continue
+
+        saved_path = _save_packed_image_if_needed(node.image)
+        if saved_path:
+            uri = saved_path
+        else:
+            uri = getattr(node.image, 'filepath', None)
+
+        if uri:
+            textures[matched_gltf_name] = {
+                'uri': uri
+            }
 
     return textures
 

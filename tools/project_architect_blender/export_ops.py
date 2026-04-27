@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import importlib
 import json
 import os
@@ -54,12 +52,12 @@ class EXPORT_OT_project_architect_gltf(Operator, ExportHelper):
 
   filename_ext = ".gltf"
 
-  filter_glob = StringProperty(
+  filter_glob: StringProperty(
     default="*.gltf;*.glb",
     options={'HIDDEN'},
   )
 
-  export_format = EnumProperty(
+  export_format: EnumProperty(
     name="Format",
     items=(
       ('GLTF_SEPARATE', 'glTF Separate (.gltf + .bin)', 'Export as separate files - Extension embedded in .gltf'),
@@ -69,25 +67,25 @@ class EXPORT_OT_project_architect_gltf(Operator, ExportHelper):
     description="Use GLTF_SEPARATE to embed extension in the .gltf file"
   )
 
-  export_textures = BoolProperty(
+  export_textures: BoolProperty(
     name="Export Textures",
     description="Export textures with the model",
     default=True,
   )
 
-  export_normals = BoolProperty(
+  export_normals: BoolProperty(
     name="Export Normals",
     description="Export vertex normals",
     default=True,
   )
 
-  export_tangents = BoolProperty(
+  export_tangents: BoolProperty(
     name="Export Tangents",
     description="Export vertex tangents",
     default=False,
   )
 
-  export_materials = EnumProperty(
+  export_materials: EnumProperty(
     name="Materials",
     items=(
       ('EXPORT', 'Export', 'Export all materials'),
@@ -97,29 +95,41 @@ class EXPORT_OT_project_architect_gltf(Operator, ExportHelper):
     default='EXPORT',
   )
 
-  export_colors = BoolProperty(
+  export_colors: BoolProperty(
     name="Export Vertex Colors",
     description="Export vertex colors",
     default=True,
   )
 
-  export_cameras = BoolProperty(
+  export_cameras: BoolProperty(
     name="Export Cameras",
     description="Export cameras",
     default=False,
   )
 
-  export_lights = BoolProperty(
+  export_lights: BoolProperty(
     name="Export Lights",
     description="Export lights using KHR_lights_punctual extension",
     default=True,
   )
 
-  use_relative_paths = BoolProperty(
+  use_relative_paths: BoolProperty(
     name="Use Relative Texture Paths",
     description="Export texture paths relative to the .blend file location",
     default=True,
   )
+
+  @staticmethod
+  def _resolve_runtime_property(value: Any, fallback: Any) -> Any:
+    if value is None:
+      return fallback
+    if type(value).__name__ == '_PropertyDeferred':
+      try:
+        keywords = getattr(value, 'keywords', {})
+        return keywords.get('default', fallback)
+      except Exception:
+        return fallback
+    return value
 
   def execute(self, context: Context) -> set[str]:
     if bpy is None:
@@ -189,14 +199,17 @@ class EXPORT_OT_project_architect_gltf(Operator, ExportHelper):
         obj.hide_select = False
 
     try:
+      export_format = self._resolve_runtime_property(self.export_format, 'GLTF_SEPARATE')
+      export_lights = bool(self._resolve_runtime_property(self.export_lights, True))
+
       export_settings = {
         'filepath': self.filepath,
-        'export_format': self.export_format,
+        'export_format': export_format,
         'export_image_format': 'NONE',
         'export_hierarchy_flatten_objs': False,
         'export_hierarchy_full_collections': True,
         'export_extras': True,
-        'export_lights': self.export_lights,
+        'export_lights': export_lights,
       }
 
       bpy.ops.export_scene.gltf(**export_settings)
@@ -229,7 +242,7 @@ class EXPORT_OT_project_architect_gltf(Operator, ExportHelper):
             obj.data.materials.append(mat)
 
     if materials_data:
-      if self.export_format == 'GLTF_SEPARATE':
+      if export_format == 'GLTF_SEPARATE':
         gltf_path = self.filepath
         if not gltf_path.endswith('.gltf'):
           gltf_path = os.path.splitext(gltf_path)[0] + '.gltf'
