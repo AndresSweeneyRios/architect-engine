@@ -21,15 +21,36 @@ const routes: RouteObject[] = [
   }
 ];
 
-const router = createHashRouter(routes);
+const isWebGPUSupported = typeof navigator !== "undefined" && "gpu" in navigator;
+
+let appContent: React.ReactNode;
+
+if (isWebGPUSupported) {
+  const router = createHashRouter(routes);
+
+  appContent = (
+    <>
+      <RouterProvider router={router} future={{
+        v7_startTransition: true,
+      }} />
+      <div id="debug">
+      </div>
+    </>
+  );
+} else {
+  appContent = (
+    <div>
+      <p>WebGPU is required to run this project.</p>
+      <p>
+        Your browser does not appear to support WebGPU. Check support here: <a href="https://caniuse.com/?search=webgpu" target="_blank" rel="noreferrer">https://caniuse.com/?search=webgpu</a>
+      </p>
+    </div>
+  );
+}
 
 ReactDOM.render(
   <React.StrictMode>
-    <RouterProvider router={router} future={{
-      v7_startTransition: true,
-    }} />
-    <div id="debug">
-    </div>
+    {appContent}
   </React.StrictMode>,
   document.getElementById('root')
 );
