@@ -168,13 +168,16 @@ export async function generateAtlases(selectedFiles, allFiles, atlasSize, textur
         continue
       }
 
-      atlasManifest[texturePath] = {
+      const atlasEntry = {
         atlasFile: atlas.fileName,
         x: uvData.x,
         y: uvData.y,
         width: uvData.width,
         height: uvData.height
       }
+
+      atlasManifest[texturePath] = atlasEntry
+      atlasManifest[`${textureType}:${texturePath}`] = atlasEntry
     }
 
     if (textureType !== 'mrao') {
@@ -194,14 +197,24 @@ export async function generateAtlases(selectedFiles, allFiles, atlasSize, textur
         continue
       }
 
-      for (const originalTexture of entry.originals) {
-        atlasManifest[originalTexture] = {
+      const hasAlphaChannel = typeof entry.channelPaths.alpha === 'string'
+
+      for (const [channelName, channelTexturePath] of Object.entries(entry.channelPaths)) {
+        if (hasAlphaChannel && channelName !== 'alpha') {
+          continue
+        }
+
+        const atlasEntry = {
           atlasFile: atlas.fileName,
           x: uv.x,
           y: uv.y,
           width: uv.width,
           height: uv.height
         }
+
+        atlasManifest[`${channelName}:${channelTexturePath}`] = atlasEntry
+        atlasManifest[`${channelName}Texture:${channelTexturePath}`] = atlasEntry
+        atlasManifest[`${channelName}TriplanarTexture:${channelTexturePath}`] = atlasEntry
       }
 
       if (atlasManifest[combinedId]) {

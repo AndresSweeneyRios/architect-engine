@@ -48,29 +48,53 @@ export async function generateManifest(selectedFiles, allFiles, atlasManifest = 
 
     Object.values(scene.materials).forEach(material => {
       Object.keys(material).forEach(key => {
-        if (typeof material[key] === 'string' && atlasManifest[material[key]]) {
-          material[key] = atlasManifest[material[key]]
+        if (typeof material[key] === 'string') {
+          const texturePath = material[key]
+          const channelKey = `${key}:${texturePath}`
+          const atlasEntry = atlasManifest[channelKey] || atlasManifest[texturePath]
+
+          if (atlasEntry) {
+            material[key] = atlasEntry
+          }
         }
       })
 
       const mraoChannels = ['metallic', 'roughness', 'ao', 'occlusion', 'alpha']
-      const mraoKeys = []
+      const nonTriplanarMraoKeys = []
+      const triplanarMraoKeys = []
 
       mraoChannels.forEach(channel => {
-        const variants = [channel, `${channel}Texture`, `${channel}TriplanarTexture`]
+        const nonTriplanarVariants = [channel, `${channel}Texture`]
+        const triplanarVariant = `${channel}TriplanarTexture`
 
-        variants.forEach(variant => {
+        nonTriplanarVariants.forEach(variant => {
           if (typeof material[variant] === 'object' && material[variant].atlasFile) {
-            mraoKeys.push(variant)
+            nonTriplanarMraoKeys.push(variant)
           }
         })
+
+        if (typeof material[triplanarVariant] === 'object' && material[triplanarVariant].atlasFile) {
+          triplanarMraoKeys.push(triplanarVariant)
+        }
       })
 
-      if (mraoKeys.length > 0) {
-        const firstMraoKey = mraoKeys[0]
-        material.metallicRoughnessAOAlphaTriplanarTexture = material[firstMraoKey]
-        mraoKeys.forEach(key => delete material[key])
+      if (nonTriplanarMraoKeys.length > 0) {
+        const preferredNonTriplanarMraoKey = nonTriplanarMraoKeys.find(
+          key => key === 'alphaTexture' || key === 'alpha'
+        ) ?? nonTriplanarMraoKeys[0]
+
+        material.metallicRoughnessAOAlphaTexture = material[preferredNonTriplanarMraoKey]
       }
+
+      if (triplanarMraoKeys.length > 0) {
+        const preferredTriplanarMraoKey = triplanarMraoKeys.find(
+          key => key === 'alphaTriplanarTexture'
+        ) ?? triplanarMraoKeys[0]
+
+        material.metallicRoughnessAOAlphaTriplanarTexture = material[preferredTriplanarMraoKey]
+      }
+
+      ;[...nonTriplanarMraoKeys, ...triplanarMraoKeys].forEach(key => delete material[key])
     })
   })
 
