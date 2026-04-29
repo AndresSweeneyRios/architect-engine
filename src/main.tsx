@@ -21,7 +21,7 @@ const routes: RouteObject[] = [
   }
 ];
 
-const isWebGPUSupported = typeof navigator !== "undefined" && "gpu" in navigator;
+const isWebGPUSupported = window.navigator?.gpu?.requestAdapter !== undefined;
 
 let appContent: React.ReactNode;
 
